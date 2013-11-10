@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<atlassian-plugin key="${project.groupId}.${project.artifactId}" name="${project.name}" plugins-version="2">
+  <plugin-info>
+    <description>${project.description}</description>
+    <version>${project.version}</version>
+    <vendor name="${project.organization.name}" url="${project.organization.url}"/>
+    <param name="plugin-icon">images/pluginIcon.png</param>
+    <param name="plugin-logo">images/pluginLogo.png</param>
+  </plugin-info>
+  <!-- add our i18n resource -->
+  <resource type="i18n" name="i18n" location="reject-merge-commit-hook"/>
+  <!-- add our web resources -->
+  <web-resource key="reject-merge-commit-hook-resources" name="reject-merge-commit-hook Web Resources">
+    <dependency>com.atlassian.auiplugin:ajs</dependency>
+    <resource type="download" name="reject-merge-commit-hook.css" location="/css/reject-merge-commit-hook.css"/>
+    <resource type="download" name="reject-merge-commit-hook.js" location="/js/reject-merge-commit-hook.js"/>
+    <resource type="download" name="images/" location="/images"/>
+    <context>reject-merge-commit-hook</context>
+  </web-resource>
+  <!-- import from the product container -->
+  <component-import key="historyService" interface="com.atlassian.stash.history.HistoryService"/>
+  <repository-hook name="Prevent Merge Commit Hook" i18n-name-key="prevent-merge-commit-hook.name" key="prevent-merge-commit-hook" class="com.carolynvs.stash.plugin.reject_merge_commit_hook.PreventMergeCommitHook">
+    <description key="prevent-merge-commit-hook.description">Prevents users from pushing merge commits</description>
+  </repository-hook>
+</atlassian-plugin>
