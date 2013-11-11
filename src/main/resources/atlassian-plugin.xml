@@ -18,9 +18,11 @@
     <resource type="download" name="images/" location="/images"/>
     <context>reject-merge-commit-hook</context>
   </web-resource>
-  <!-- import from the product container -->
+  
   <component-import key="historyService" interface="com.atlassian.stash.history.HistoryService"/>
-  <repository-hook name="Prevent Merge Commit Hook" i18n-name-key="prevent-merge-commit-hook.name" key="prevent-merge-commit-hook" class="com.carolynvs.stash.plugin.reject_merge_commit_hook.PreventMergeCommitHook">
-    <description key="prevent-merge-commit-hook.description">Prevents users from pushing merge commits</description>
+  <component-import key="gitCmdBuilderFactory" interface="com.atlassian.stash.scm.git.GitCommandBuilderFactory"/>
+  
+  <repository-hook name="Reject Merge Commits Hook" i18n-name-key="reject-merge-commit-hook.name" key="reject-merge-commit-hook" class="com.carolynvs.stash.plugin.reject_merge_commit_hook.RejectMergeCommitHook">
+    <description key="reject-merge-commit-hook.description">Reject "simple" merge commits, such as the type of commits created when git pull is used without --rebase. Merges between branches are allowed.</description>
   </repository-hook>
 </atlassian-plugin>
