@@ -10,16 +10,19 @@ import com.atlassian.stash.scm.git.*;
 import com.atlassian.stash.util.*;
 import com.google.common.collect.*;
 import java.util.*;
+import com.atlassian.stash.i18n.I18nService;
 
 public class RejectMergeCommitHook implements PreReceiveRepositoryHook
 {
 	private static final PageRequestImpl PAGE_REQUEST = new PageRequestImpl(0, 100);
 	private final HistoryService historyService;
 	private final GitCommandBuilderFactory commandFactory;
-	
-	public RejectMergeCommitHook(HistoryService historyService, GitCommandBuilderFactory commandFactory) {
+    private final I18nService i18nService;
+
+	public RejectMergeCommitHook(HistoryService historyService, GitCommandBuilderFactory commandFactory, I18nService i18nService) {
 		this.historyService = historyService;
 		this.commandFactory = commandFactory;
+        this.i18nService = i18nService;
 	}
 	
     /**
@@ -34,7 +37,7 @@ public class RejectMergeCommitHook implements PreReceiveRepositoryHook
 		
 		if(rejectPush) {
 			hookResponse.out().println("=================================");
-			hookResponse.out().println("Only merge commits caused by merging a feature branch are alloweed. Use rebase instead of merge and re-push.");
+			hookResponse.out().println(i18nService.getText("com.carolynvs.stash.plugin.reject_merge_commit_hook.error_message", "Merge commits where all parents are from the same branch are not allowed."));
 			hookResponse.out().println("=================================");
 			return false;
 		}
@@ -49,8 +52,6 @@ public class RejectMergeCommitHook implements PreReceiveRepositoryHook
 
 			Collection<MinimalChangeset> parents = mergeCommit.getParents();
 
-            hookResponse.out().println("merge commit: " + mergeCommit.getId());
-
 			for(MinimalChangeset parent : parents) {
 				String parentId = parent.getId();
 				
@@ -60,7 +61,7 @@ public class RejectMergeCommitHook implements PreReceiveRepositoryHook
                 List<String> sourceBranches = getBranches.call();
 
                 if(sourceBranches.size() == 0) {
-                    hookResponse.out().println("Invalid merge commit: " + mergeCommit.getId());
+                    hookResponse.out().println(String.format("%s: %s", i18nService.getText("com.carolynvs.stash.plugin.reject_merge_commit_hook.rejected_merge_commit", "Rejected merge commit"), mergeCommit.getId()));
                     return true;
                 }
 			}

@@ -21,7 +21,8 @@
   
   <component-import key="historyService" interface="com.atlassian.stash.history.HistoryService"/>
   <component-import key="gitCmdBuilderFactory" interface="com.atlassian.stash.scm.git.GitCommandBuilderFactory"/>
-  
+  <component-import key="i18nService" interface="com.atlassian.stash.i18n.I18nService"/>
+
   <repository-hook name="Reject Merge Commits Hook" i18n-name-key="reject-merge-commit-hook.name" key="reject-merge-commit-hook" class="com.carolynvs.stash.plugin.reject_merge_commit_hook.RejectMergeCommitHook">
     <description key="reject-merge-commit-hook.description">Reject "simple" merge commits, such as the type of commits created when git pull is used without --rebase. Merges between branches are allowed.</description>
   </repository-hook>
