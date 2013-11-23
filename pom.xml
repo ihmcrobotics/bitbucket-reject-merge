@@ -4,13 +4,13 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.carolynvs</groupId>
     <artifactId>reject-merge-commit-hook</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0</version>
     <organization>
         <name>Carolyn Van Slyck</name>
         <url>http://carolynvanslyck.com.com/</url>
     </organization>
     <name>Reject Merge Commits Hook</name>
-    <description>Reject "simple" merge commits, such as the type of commits created when git pull is used without --rebase. Merges between branches are allowed.</description>
+    <description>Reject merge commits where all parents are from the same branch, e.g. merge commits created when git pull is used without --rebase. Merges between branches are allowed.</description>
     <packaging>atlassian-plugin</packaging>
     <dependencyManagement>
         <dependencies>

@@ -5,25 +5,18 @@
     <description>${project.description}</description>
     <version>${project.version}</version>
     <vendor name="${project.organization.name}" url="${project.organization.url}"/>
-    <param name="plugin-icon">images/pluginIcon.png</param>
-    <param name="plugin-logo">images/pluginLogo.png</param>
+    <param name="plugin-icon">images/mergeIcon.png</param>
+    <param name="plugin-logo">images/mergeLogo.png</param>
   </plugin-info>
-  <!-- add our i18n resource -->
+
   <resource type="i18n" name="i18n" location="reject-merge-commit-hook"/>
-  <!-- add our web resources -->
-  <web-resource key="reject-merge-commit-hook-resources" name="reject-merge-commit-hook Web Resources">
-    <dependency>com.atlassian.auiplugin:ajs</dependency>
-    <resource type="download" name="reject-merge-commit-hook.css" location="/css/reject-merge-commit-hook.css"/>
-    <resource type="download" name="reject-merge-commit-hook.js" location="/js/reject-merge-commit-hook.js"/>
-    <resource type="download" name="images/" location="/images"/>
-    <context>reject-merge-commit-hook</context>
-  </web-resource>
   
   <component-import key="historyService" interface="com.atlassian.stash.history.HistoryService"/>
   <component-import key="gitCmdBuilderFactory" interface="com.atlassian.stash.scm.git.GitCommandBuilderFactory"/>
   <component-import key="i18nService" interface="com.atlassian.stash.i18n.I18nService"/>
 
   <repository-hook name="Reject Merge Commits Hook" i18n-name-key="reject-merge-commit-hook.name" key="reject-merge-commit-hook" class="com.carolynvs.stash.plugin.reject_merge_commit_hook.RejectMergeCommitHook">
-    <description key="reject-merge-commit-hook.description">Reject "simple" merge commits, such as the type of commits created when git pull is used without --rebase. Merges between branches are allowed.</description>
+    <description key="reject-merge-commit-hook.description">Reject merge commits where all parents are from the same branch, e.g. merge commits created when git pull is used without --rebase. Merges between branches are allowed.</description>
+    <icon>images/mergeLogo.png</icon>
   </repository-hook>
 </atlassian-plugin>
