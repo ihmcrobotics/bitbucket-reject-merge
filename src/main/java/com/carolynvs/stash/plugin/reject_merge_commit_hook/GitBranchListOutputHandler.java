@@ -17,24 +17,28 @@ import java.io.IOException;
  * feature-branch2
  * </pre>
  */
-public class GitBranchListOutputHandler extends LineReaderOutputHandler implements CommandOutputHandler<List<String>> {
-
+public class GitBranchListOutputHandler extends LineReaderOutputHandler implements CommandOutputHandler<List<String>>
+{
     private final List<String> branches = new Vector<String>();
 
-    public GitBranchListOutputHandler() {
+    public GitBranchListOutputHandler()
+    {
         super("UTF-8");
     }
 
     @Override
-    public List<String> getOutput() {
+    public List<String> getOutput()
+    {
         return branches;
     }
 
     @Override
-    protected void processReader(LineReader lineReader) throws IOException {
-        String line;
-        while ((line = lineReader.readLine()) != null) {
-			branches.add(line);
+    protected void processReader(LineReader lineReader) throws IOException
+    {
+        String branch;
+        while ((branch = lineReader.readLine()) != null) {
+            branch = branch.replace("* ", "").trim(); // strip the highlighting on the current branch
+			branches.add(branch);
         }
     }
 
