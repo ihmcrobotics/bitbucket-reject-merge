@@ -23,6 +23,7 @@ import static org.mockito.Mockito.*;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.stubbing.OngoingStubbing;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -76,7 +77,14 @@ public class RejectMergeCommitHookTest extends TestCase
     private void MockGitBranchContainsCommand(String... branches)
     {
         GitCommand<List<String>> gitBranchesCommand = (GitCommand<List<String>>) mock(GitCommand.class);
-        when(gitBranchesCommand.call()).thenReturn(Lists.newArrayList(branches));
+        OngoingStubbing<List<String>> when = when(gitBranchesCommand.call());
+        for (String branch : branches)
+        {
+            ArrayList<String> result = new ArrayList<String>();
+            if(branch != null)
+                result.add(branch);
+            when = when.thenReturn(result);
+        }
 
         GitScmCommandBuilder gitCommandBuilder = mock(GitScmCommandBuilder.class);
         when(gitCommandBuilder.command(any(String.class))).thenReturn(gitCommandBuilder);
@@ -93,11 +101,11 @@ public class RejectMergeCommitHookTest extends TestCase
     }
 
     @Test
-    public void WhenMergeCommitWithSingleParentIsPushed_ItIsRejected()
+    public void WhenCommit_WithMergeFromMasterToMaster_IsPushedToMaster_ItIsRejected()
     {
         Changeset mergeChangeset = buildMergeChangeset();
         MockGetChangesets(mergeChangeset);
-        MockGitBranchContainsCommand("master");
+        MockGitBranchContainsCommand("master", null);
 
         RejectMergeCommitHook hook = new RejectMergeCommitHook(historyService, commandFactory, i18nService);
         Collection<RefChange> refChanges = Lists.newArrayList(
@@ -107,6 +115,56 @@ public class RejectMergeCommitHookTest extends TestCase
         boolean isAccepted = hook.onReceive(hookContext, refChanges, hookResponse);
 
         assertFalse(isAccepted);
+    }
+
+    @Test
+    public void WhenCommit_WithMergeFromTrunkToFeature_IsPushedToMaster_ItIsAccepted()
+    {
+        Changeset mergeChangeset = buildMergeChangeset();
+        MockGetChangesets(mergeChangeset);
+        MockGitBranchContainsCommand("feature-branch", null);
+
+        RejectMergeCommitHook hook = new RejectMergeCommitHook(historyService, commandFactory, i18nService);
+        Collection<RefChange> refChanges = Lists.newArrayList(
+                buildRefChange("refs/heads/master", mergeChangeset.getId(), mergeChangeset.getId())
+        );
+
+        boolean isAccepted = hook.onReceive(hookContext, refChanges, hookResponse);
+
+        assertTrue(isAccepted);
+    }
+
+    @Test
+    public void WhenCommit_WithMergeFromTrunkToFeature_IsPushedToFeature_ItIsAccepted()
+    {
+        Changeset mergeChangeset = buildMergeChangeset();
+        MockGetChangesets(mergeChangeset);
+        MockGitBranchContainsCommand("master", "feature-branch");
+
+        RejectMergeCommitHook hook = new RejectMergeCommitHook(historyService, commandFactory, i18nService);
+        Collection<RefChange> refChanges = Lists.newArrayList(
+                buildRefChange("refs/heads/feature-branch", mergeChangeset.getId(), mergeChangeset.getId())
+        );
+
+        boolean isAccepted = hook.onReceive(hookContext, refChanges, hookResponse);
+
+        assertTrue(isAccepted);
+    }
+
+    @Test
+    public void WhenCommit_WithoutMerge_IsPushed_ItIsAccepted()
+    {
+        Changeset normalChangeset = buildChangeset();
+        MockGetChangesets(normalChangeset);
+
+        RejectMergeCommitHook hook = new RejectMergeCommitHook(historyService, commandFactory, i18nService);
+        Collection<RefChange> refChanges = Lists.newArrayList(
+                buildRefChange("refs/heads/feature-branch", normalChangeset.getId(), normalChangeset.getId())
+        );
+
+        boolean isAccepted = hook.onReceive(hookContext, refChanges, hookResponse);
+
+        assertTrue(isAccepted);
     }
 
     private RefChange buildRefChange(String refId, String fromHash, String toHash)
@@ -120,16 +178,27 @@ public class RejectMergeCommitHookTest extends TestCase
         return refChange;
     }
 
-
     private Changeset buildMergeChangeset()
+    {
+        return buildChangeset(2);
+    }
+
+    private Changeset buildChangeset()
+    {
+        return buildChangeset(1);
+    }
+
+    private Changeset buildChangeset(int numberOfParents)
     {
         Changeset mergeChangeset = mock(Changeset.class);
 
         when(mergeChangeset.getId()).thenReturn(UUID.randomUUID().toString());
-        Collection<MinimalChangeset> parents = Lists.newArrayList(
-                buildParentChangeset(),
-                buildParentChangeset()
-        );
+
+        ArrayList<MinimalChangeset> parents = new ArrayList<MinimalChangeset>(numberOfParents);
+        for (int i = 0; i < numberOfParents; i++)
+        {
+            parents.add(buildParentChangeset());
+        }
         when(mergeChangeset.getParents()).thenReturn(parents);
 
         return mergeChangeset;
