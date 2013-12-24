@@ -134,7 +134,7 @@ public class RejectMergeCommitHook implements PreReceiveRepositoryHook
 			public Page<Changeset> get(PageRequest pageRequest)
             {
                 ChangesetsBetweenRequest betweenRequest = new ChangesetsBetweenRequest.Builder(repository)
-                        .include(refChange.getFromHash())
+                        .exclude(refChange.getFromHash())
                         .include(refChange.getToHash())
                         .build();
 				return historyService.getChangesetsBetween(betweenRequest, pageRequest);

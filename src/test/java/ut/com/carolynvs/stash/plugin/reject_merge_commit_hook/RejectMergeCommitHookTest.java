@@ -21,16 +21,14 @@ import org.junit.Before;
 import org.junit.runner.RunWith;
 import static org.mockito.Mockito.*;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.OngoingStubbing;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Testing {@link com.carolynvs.stash.plugin.reject_merge_commit_hook.RejectMergeCommitHook}
@@ -165,6 +163,30 @@ public class RejectMergeCommitHookTest extends TestCase
         boolean isAccepted = hook.onReceive(hookContext, refChanges, hookResponse);
 
         assertTrue(isAccepted);
+    }
+
+    @Test
+    public void CommitsInFromHashAreNotIncludedInMergeChecks()
+    {
+        Changeset normalChangeset = buildChangeset();
+        String fromHash = UUID.randomUUID().toString();
+        String toHash = normalChangeset.getId();
+
+        Page<Changeset> pagedChanges = PageUtils.createPage(Lists.newArrayList(normalChangeset), PageUtils.newRequest(0, 1));
+        ArgumentCaptor<ChangesetsBetweenRequest> capturedRequest = ArgumentCaptor.forClass(ChangesetsBetweenRequest.class);
+        when(historyService.getChangesetsBetween(capturedRequest.capture(), any(PageRequest.class)))
+                .thenReturn(pagedChanges);
+
+        RejectMergeCommitHook hook = new RejectMergeCommitHook(historyService, commandFactory, i18nService);
+        Collection<RefChange> refChanges = Lists.newArrayList(
+                buildRefChange("refs/heads/feature-branch", fromHash, toHash)
+        );
+
+        hook.onReceive(hookContext, refChanges, hookResponse);
+
+        ChangesetsBetweenRequest request = capturedRequest.getValue();
+        assertTrue(request.getExcludes().contains(fromHash));
+        assertTrue(request.getIncludes().contains(toHash));
     }
 
     private RefChange buildRefChange(String refId, String fromHash, String toHash)
