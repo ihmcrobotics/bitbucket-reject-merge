@@ -43,6 +43,11 @@ public class RejectMergeCommitHook implements PreReceiveRepositoryHook
 
         for(RefChange refChange : refChanges)
         {
+            if(isNewBranch(refChange))
+            {
+                continue;
+            }
+
             String destinationRef = refChange.getRefId().replace("refs/heads/", "");
             Iterable<Changeset> mergeCommits = findMergeCommits(repository, refChange);
             boolean rejectPush = containsSingleBranchMergeCommit(repository, destinationRef, mergeCommits, hookResponse);
@@ -110,7 +115,12 @@ public class RejectMergeCommitHook implements PreReceiveRepositoryHook
 		
 		return mergeCommits;
 	}
-	
+
+    private boolean isNewBranch(RefChange refChange)
+    {
+        return refChange.getFromHash().equals("0000000000000000000000000000000000000000");
+    }
+
 	private boolean isMergeCommit(Changeset changeset)
 	{
 		return changeset.getParents().size() > 1;
