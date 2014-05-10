@@ -1,9 +1,9 @@
 package com.carolynvs.stash.plugin.reject_merge_commit_hook;
 
+import com.atlassian.stash.commit.CommitService;
 import com.atlassian.stash.content.Changeset;
 import com.atlassian.stash.content.ChangesetsBetweenRequest;
 import com.atlassian.stash.content.MinimalChangeset;
-import com.atlassian.stash.history.HistoryService;
 import com.atlassian.stash.hook.HookResponse;
 import com.atlassian.stash.hook.repository.PreReceiveRepositoryHook;
 import com.atlassian.stash.hook.repository.RepositoryHookContext;
@@ -22,11 +22,11 @@ import java.util.Vector;
 public class RejectMergeCommitHook implements PreReceiveRepositoryHook
 {
 	private static final PageRequestImpl PAGE_REQUEST = new PageRequestImpl(0, 100);
-	private final HistoryService historyService;
+	private final CommitService historyService;
 	private final GitCommandBuilderFactory commandFactory;
     private final I18nService i18nService;
 
-	public RejectMergeCommitHook(HistoryService historyService, GitCommandBuilderFactory commandFactory, I18nService i18nService)
+	public RejectMergeCommitHook(CommitService historyService, GitCommandBuilderFactory commandFactory, I18nService i18nService)
     {
 		this.historyService = historyService;
 		this.commandFactory = commandFactory;

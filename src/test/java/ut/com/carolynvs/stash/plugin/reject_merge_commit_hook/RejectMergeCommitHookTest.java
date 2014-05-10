@@ -1,9 +1,9 @@
 package ut.com.carolynvs.stash.plugin.reject_merge_commit_hook;
 
+import com.atlassian.stash.commit.CommitService;
 import com.atlassian.stash.content.Changeset;
 import com.atlassian.stash.content.ChangesetsBetweenRequest;
 import com.atlassian.stash.content.MinimalChangeset;
-import com.atlassian.stash.history.HistoryService;
 import com.atlassian.stash.hook.HookResponse;
 import com.atlassian.stash.hook.repository.RepositoryHookContext;
 import com.atlassian.stash.i18n.I18nService;
@@ -37,7 +37,7 @@ import java.util.*;
 public class RejectMergeCommitHookTest extends TestCase
 {
     @Mock
-    private HistoryService historyService;
+    private CommitService historyService;
 
     @Mock
     private Repository repository;

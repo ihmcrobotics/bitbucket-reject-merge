@@ -11,7 +11,7 @@
 
   <resource type="i18n" name="i18n" location="reject-merge-commit-hook"/>
   
-  <component-import key="historyService" interface="com.atlassian.stash.history.HistoryService"/>
+  <component-import key="commitService" interface="com.atlassian.stash.commit.CommitService"/>
   <component-import key="gitCmdBuilderFactory" interface="com.atlassian.stash.scm.git.GitCommandBuilderFactory"/>
   <component-import key="i18nService" interface="com.atlassian.stash.i18n.I18nService"/>
 
