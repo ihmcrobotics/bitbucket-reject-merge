@@ -1,12 +1,13 @@
 package ut.com.carolynvs.stash.plugin.reject_merge_commit_hook;
 
+import com.atlassian.stash.commit.Commit;
 import com.atlassian.stash.commit.CommitService;
-import com.atlassian.stash.content.Changeset;
-import com.atlassian.stash.content.ChangesetsBetweenRequest;
-import com.atlassian.stash.content.MinimalChangeset;
+import com.atlassian.stash.commit.CommitsBetweenRequest;
+import com.atlassian.stash.commit.MinimalCommit;
 import com.atlassian.stash.hook.HookResponse;
 import com.atlassian.stash.hook.repository.RepositoryHookContext;
 import com.atlassian.stash.i18n.I18nService;
+import com.atlassian.stash.idx.CommitIndex;
 import com.atlassian.stash.repository.RefChange;
 import com.atlassian.stash.repository.Repository;
 import com.atlassian.stash.scm.git.GitCommand;
@@ -37,7 +38,10 @@ import java.util.*;
 public class RejectMergeCommitHookTest extends TestCase
 {
     @Mock
-    private CommitService historyService;
+    private CommitService commitService;
+
+    @Mock
+    private CommitIndex commitIndex;
 
     @Mock
     private Repository repository;
@@ -59,6 +63,7 @@ public class RejectMergeCommitHookTest extends TestCase
     {
         MockRepository();
         MockHookResponse();
+        MockCommitIndex();
     }
 
     private void MockRepository()
@@ -92,22 +97,27 @@ public class RejectMergeCommitHookTest extends TestCase
         when(commandFactory.builder(repository)).thenReturn(gitCommandBuilder);
     }
 
-    private void MockGetChangesets(Changeset... changesets)
+    private void MockGetCommits(Commit... commits)
     {
-        Page<Changeset> pagedChanges = PageUtils.createPage(Lists.newArrayList(changesets), PageUtils.newRequest(0, 1));
-        when(historyService.getChangesetsBetween(any(ChangesetsBetweenRequest.class), any(PageRequest.class))).thenReturn(pagedChanges);
+        Page<Commit> pagedChanges = PageUtils.createPage(Lists.newArrayList(commits), PageUtils.newRequest(0, 1));
+        when(commitService.getCommitsBetween(any(CommitsBetweenRequest.class), any(PageRequest.class))).thenReturn(pagedChanges);
+    }
+
+    private void MockCommitIndex()
+    {
+        when(commitIndex.isMemberOf(any(String.class), any(Repository.class))).thenReturn(false);
     }
 
     @Test
     public void WhenCommit_WithMergeFromMasterToMaster_IsPushedToMaster_ItIsRejected()
     {
-        Changeset mergeChangeset = buildMergeChangeset();
-        MockGetChangesets(mergeChangeset);
+        Commit mergeCommit = buildMergeCommit();
+        MockGetCommits(mergeCommit);
         MockGitBranchContainsCommand("master", null);
 
-        RejectMergeCommitHook hook = new RejectMergeCommitHook(historyService, commandFactory, i18nService);
+        RejectMergeCommitHook hook = new RejectMergeCommitHook(commitService, commandFactory, i18nService, commitIndex);
         Collection<RefChange> refChanges = Lists.newArrayList(
-                buildRefChange("refs/heads/master", mergeChangeset.getId(), mergeChangeset.getId())
+                buildRefChange("refs/heads/master", mergeCommit.getId(), mergeCommit.getId())
         );
 
         boolean isAccepted = hook.onReceive(hookContext, refChanges, hookResponse);
@@ -118,13 +128,13 @@ public class RejectMergeCommitHookTest extends TestCase
     @Test
     public void WhenCommit_WithMergeFromTrunkToFeature_IsPushedToMaster_ItIsAccepted()
     {
-        Changeset mergeChangeset = buildMergeChangeset();
-        MockGetChangesets(mergeChangeset);
+        Commit mergeCommit = buildMergeCommit();
+        MockGetCommits(mergeCommit);
         MockGitBranchContainsCommand("feature-branch", null);
 
-        RejectMergeCommitHook hook = new RejectMergeCommitHook(historyService, commandFactory, i18nService);
+        RejectMergeCommitHook hook = new RejectMergeCommitHook(commitService, commandFactory, i18nService, commitIndex);
         Collection<RefChange> refChanges = Lists.newArrayList(
-                buildRefChange("refs/heads/master", mergeChangeset.getId(), mergeChangeset.getId())
+                buildRefChange("refs/heads/master", mergeCommit.getId(), mergeCommit.getId())
         );
 
         boolean isAccepted = hook.onReceive(hookContext, refChanges, hookResponse);
@@ -135,13 +145,13 @@ public class RejectMergeCommitHookTest extends TestCase
     @Test
     public void WhenCommit_WithMergeFromTrunkToFeature_IsPushedToFeature_ItIsAccepted()
     {
-        Changeset mergeChangeset = buildMergeChangeset();
-        MockGetChangesets(mergeChangeset);
+        Commit mergeCommit = buildMergeCommit();
+        MockGetCommits(mergeCommit);
         MockGitBranchContainsCommand("master", "feature-branch");
 
-        RejectMergeCommitHook hook = new RejectMergeCommitHook(historyService, commandFactory, i18nService);
+        RejectMergeCommitHook hook = new RejectMergeCommitHook(commitService, commandFactory, i18nService, commitIndex);
         Collection<RefChange> refChanges = Lists.newArrayList(
-                buildRefChange("refs/heads/feature-branch", mergeChangeset.getId(), mergeChangeset.getId())
+                buildRefChange("refs/heads/feature-branch", mergeCommit.getId(), mergeCommit.getId())
         );
 
         boolean isAccepted = hook.onReceive(hookContext, refChanges, hookResponse);
@@ -152,12 +162,12 @@ public class RejectMergeCommitHookTest extends TestCase
     @Test
     public void WhenCommit_WithoutMerge_IsPushed_ItIsAccepted()
     {
-        Changeset normalChangeset = buildChangeset();
-        MockGetChangesets(normalChangeset);
+        Commit normalCommit = buildCommit();
+        MockGetCommits(normalCommit);
 
-        RejectMergeCommitHook hook = new RejectMergeCommitHook(historyService, commandFactory, i18nService);
+        RejectMergeCommitHook hook = new RejectMergeCommitHook(commitService, commandFactory, i18nService, commitIndex);
         Collection<RefChange> refChanges = Lists.newArrayList(
-                buildRefChange("refs/heads/feature-branch", normalChangeset.getId(), normalChangeset.getId())
+                buildRefChange("refs/heads/feature-branch", normalCommit.getId(), normalCommit.getId())
         );
 
         boolean isAccepted = hook.onReceive(hookContext, refChanges, hookResponse);
@@ -168,23 +178,23 @@ public class RejectMergeCommitHookTest extends TestCase
     @Test
     public void CommitsInFromHashAreNotIncludedInMergeChecks()
     {
-        Changeset normalChangeset = buildChangeset();
+        Commit normalCommit = buildCommit();
         String fromHash = UUID.randomUUID().toString();
-        String toHash = normalChangeset.getId();
+        String toHash = normalCommit.getId();
 
-        Page<Changeset> pagedChanges = PageUtils.createPage(Lists.newArrayList(normalChangeset), PageUtils.newRequest(0, 1));
-        ArgumentCaptor<ChangesetsBetweenRequest> capturedRequest = ArgumentCaptor.forClass(ChangesetsBetweenRequest.class);
-        when(historyService.getChangesetsBetween(capturedRequest.capture(), any(PageRequest.class)))
+        Page<Commit> pagedChanges = PageUtils.createPage(Lists.newArrayList(normalCommit), PageUtils.newRequest(0, 1));
+        ArgumentCaptor<CommitsBetweenRequest> capturedRequest = ArgumentCaptor.forClass(CommitsBetweenRequest.class);
+        when(commitService.getCommitsBetween(capturedRequest.capture(), any(PageRequest.class)))
                 .thenReturn(pagedChanges);
 
-        RejectMergeCommitHook hook = new RejectMergeCommitHook(historyService, commandFactory, i18nService);
+        RejectMergeCommitHook hook = new RejectMergeCommitHook(commitService, commandFactory, i18nService, commitIndex);
         Collection<RefChange> refChanges = Lists.newArrayList(
                 buildRefChange("refs/heads/feature-branch", fromHash, toHash)
         );
 
         hook.onReceive(hookContext, refChanges, hookResponse);
 
-        ChangesetsBetweenRequest request = capturedRequest.getValue();
+        CommitsBetweenRequest request = capturedRequest.getValue();
         assertTrue(request.getExcludes().contains(fromHash));
         assertTrue(request.getIncludes().contains(toHash));
     }
@@ -200,35 +210,36 @@ public class RejectMergeCommitHookTest extends TestCase
         return refChange;
     }
 
-    private Changeset buildMergeChangeset()
+    private Commit buildMergeCommit()
     {
-        return buildChangeset(2);
+        return buildCommit(2);
     }
 
-    private Changeset buildChangeset()
+    private Commit buildCommit()
     {
-        return buildChangeset(1);
+        return buildCommit(1);
     }
 
-    private Changeset buildChangeset(int numberOfParents)
+    private Commit buildCommit(int numberOfParents)
     {
-        Changeset mergeChangeset = mock(Changeset.class);
+        Commit commit = mock(Commit.class);
 
-        when(mergeChangeset.getId()).thenReturn(UUID.randomUUID().toString());
+        when(commit.getId()).thenReturn(UUID.randomUUID().toString());
 
-        ArrayList<MinimalChangeset> parents = new ArrayList<MinimalChangeset>(numberOfParents);
+        ArrayList<MinimalCommit> parents = new ArrayList<MinimalCommit>(numberOfParents);
         for (int i = 0; i < numberOfParents; i++)
         {
-            parents.add(buildParentChangeset());
+            parents.add(buildParentCommit());
         }
-        when(mergeChangeset.getParents()).thenReturn(parents);
+        when(commit.getParents()).thenReturn(parents);
 
-        return mergeChangeset;
+        return commit;
     }
 
-    private MinimalChangeset buildParentChangeset()
+    //TODO: the recursion fails because the parent commit does not really exist
+    private MinimalCommit buildParentCommit()
     {
-        MinimalChangeset parent = mock(MinimalChangeset.class);
+        MinimalCommit parent = mock(MinimalCommit.class);
 
         when(parent.getId()).thenReturn(UUID.randomUUID().toString());
 
