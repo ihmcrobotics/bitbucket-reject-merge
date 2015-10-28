@@ -1,19 +1,19 @@
 package com.carolynvs.stash.plugin.reject_merge_commit_hook;
 
-import com.atlassian.stash.commit.Commit;
-import com.atlassian.stash.commit.CommitRequest;
-import com.atlassian.stash.commit.CommitService;
-import com.atlassian.stash.commit.MinimalCommit;
-import com.atlassian.stash.hook.HookResponse;
-import com.atlassian.stash.hook.repository.PreReceiveRepositoryHook;
-import com.atlassian.stash.hook.repository.RepositoryHookContext;
-import com.atlassian.stash.i18n.I18nService;
-import com.atlassian.stash.idx.CommitIndex;
-import com.atlassian.stash.repository.RefChange;
-import com.atlassian.stash.repository.RefChangeType;
-import com.atlassian.stash.repository.Repository;
-import com.atlassian.stash.scm.Command;
-import com.atlassian.stash.scm.git.GitCommandBuilderFactory;
+import com.atlassian.bitbucket.commit.Commit;
+import com.atlassian.bitbucket.commit.CommitRequest;
+import com.atlassian.bitbucket.commit.CommitService;
+import com.atlassian.bitbucket.commit.MinimalCommit;
+import com.atlassian.bitbucket.hook.HookResponse;
+import com.atlassian.bitbucket.hook.repository.PreReceiveRepositoryHook;
+import com.atlassian.bitbucket.hook.repository.RepositoryHookContext;
+import com.atlassian.bitbucket.i18n.I18nService;
+import com.atlassian.bitbucket.idx.CommitIndex;
+import com.atlassian.bitbucket.repository.RefChange;
+import com.atlassian.bitbucket.repository.RefChangeType;
+import com.atlassian.bitbucket.repository.Repository;
+import com.atlassian.bitbucket.scm.Command;
+import com.atlassian.bitbucket.scm.git.command.GitCommandBuilderFactory;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;
@@ -68,9 +68,10 @@ public class RejectMergeCommitHook implements PreReceiveRepositoryHook
             if(containsIllegalMergeRecursive(refChange.getToHash(), repository, branchName, hookResponse))
             {
                 hookResponse.err().println(i18nService.getText(
-                        "com.carolynvs.stash.plugin.reject_merge_commit_hook.error_message",
-                        "Merge commits where all parents are from the same branch are not allowed."
-                                + "\n Illegal merge commits were found in the " + branchName + " branch."));
+                    "com.carolynvs.stash.plugin.reject_merge_commit_hook.error_message",
+                    "Trivial merge detected on local branch " + branchName +
+                    "\nPlease fix by running: git rebase origin/" + branchName +
+                    "\n\nNext time, use a rebase to keep a clean linear history: ie. git pull --rebase\n"));
                 hookResponse.err().println("=================================");
                 return false;
             }
@@ -94,7 +95,7 @@ public class RejectMergeCommitHook implements PreReceiveRepositoryHook
     {
         //isMemberOf is false for newly pushed commits, true for pre-existing ones
         //if this commit is not new, it and its ancestors are already processed, there is nothing to do
-        if (commitIndex.isMemberOf(hash, repository))
+        if (commitIndex.isIndexed(hash, repository))
         {
             return false;
         }

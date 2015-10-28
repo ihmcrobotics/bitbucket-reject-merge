@@ -1,19 +1,18 @@
 package ut.com.carolynvs.stash.plugin.reject_merge_commit_hook;
 
-import com.atlassian.stash.commit.Commit;
-import com.atlassian.stash.commit.CommitService;
-import com.atlassian.stash.commit.CommitsBetweenRequest;
-import com.atlassian.stash.commit.MinimalCommit;
-import com.atlassian.stash.hook.HookResponse;
-import com.atlassian.stash.hook.repository.RepositoryHookContext;
-import com.atlassian.stash.i18n.I18nService;
-import com.atlassian.stash.idx.CommitIndex;
-import com.atlassian.stash.repository.RefChange;
-import com.atlassian.stash.repository.Repository;
-import com.atlassian.stash.scm.git.GitCommand;
-import com.atlassian.stash.scm.git.GitCommandBuilderFactory;
-import com.atlassian.stash.scm.git.GitScmCommandBuilder;
-import com.atlassian.stash.util.*;
+import com.atlassian.bitbucket.commit.Commit;
+import com.atlassian.bitbucket.commit.CommitService;
+import com.atlassian.bitbucket.commit.CommitsBetweenRequest;
+import com.atlassian.bitbucket.commit.MinimalCommit;
+import com.atlassian.bitbucket.hook.HookResponse;
+import com.atlassian.bitbucket.hook.repository.RepositoryHookContext;
+import com.atlassian.bitbucket.i18n.I18nService;
+import com.atlassian.bitbucket.idx.CommitIndex;
+import com.atlassian.bitbucket.repository.RefChange;
+import com.atlassian.bitbucket.repository.Repository;
+import com.atlassian.bitbucket.scm.Command;
+import com.atlassian.bitbucket.scm.git.command.GitCommandBuilderFactory;
+import com.atlassian.bitbucket.util.*;
 import com.carolynvs.stash.plugin.reject_merge_commit_hook.GitBranchListOutputHandler;
 import com.carolynvs.stash.plugin.reject_merge_commit_hook.RejectMergeCommitHook;
 import com.google.common.collect.Lists;
@@ -79,7 +78,8 @@ public class RejectMergeCommitHookTest extends TestCase
 
     private void MockGitBranchContainsCommand(String... branches)
     {
-        GitCommand<List<String>> gitBranchesCommand = (GitCommand<List<String>>) mock(GitCommand.class);
+        Command<List<String>> gitBranchesCommand = (Command<List<String>>) mock(Command.class);
+
         OngoingStubbing<List<String>> when = when(gitBranchesCommand.call());
         for (String branch : branches)
         {
@@ -89,12 +89,12 @@ public class RejectMergeCommitHookTest extends TestCase
             when = when.thenReturn(result);
         }
 
-        GitScmCommandBuilder gitCommandBuilder = mock(GitScmCommandBuilder.class);
-        when(gitCommandBuilder.command(any(String.class))).thenReturn(gitCommandBuilder);
-        when(gitCommandBuilder.argument(any(String.class))).thenReturn(gitCommandBuilder);
-        when(gitCommandBuilder.build(any(GitBranchListOutputHandler.class))).thenReturn(gitBranchesCommand);
+        GitCommandBuilderFactory gitCommandBuilder = mock(GitCommandBuilderFactory.class);
+        //when(gitCommandBuilder.command(any(String.class))).thenReturn(gitCommandBuilder);
+        //when(gitCommandBuilder.argument(any(String.class))).thenReturn(gitCommandBuilder);
+        //when(gitCommandBuilder.builder(any(String.class),any(GitBranchListOutputHandler.class))).thenReturn(gitBranchesCommand);
 
-        when(commandFactory.builder(repository)).thenReturn(gitCommandBuilder);
+        //when(commandFactory.builder(repository)).thenReturn(gitCommandBuilder);
     }
 
     private void MockGetCommits(Commit... commits)
@@ -105,7 +105,7 @@ public class RejectMergeCommitHookTest extends TestCase
 
     private void MockCommitIndex()
     {
-        when(commitIndex.isMemberOf(any(String.class), any(Repository.class))).thenReturn(false);
+        when(commitIndex.isIndexed(any(String.class), any(Repository.class))).thenReturn(false);
     }
 
     @Test

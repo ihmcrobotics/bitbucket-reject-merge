@@ -1,3 +1,5 @@
 /target
 /.idea
 /reject-merge-commit-hook.iml
+.DS_Store
+
