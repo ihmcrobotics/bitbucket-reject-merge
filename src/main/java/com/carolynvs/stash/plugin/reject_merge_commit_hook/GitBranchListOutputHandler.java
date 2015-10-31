@@ -1,7 +1,7 @@
 package com.carolynvs.stash.plugin.reject_merge_commit_hook;
 
-import com.atlassian.stash.io.*;
-import com.atlassian.stash.scm.*;
+import com.atlassian.bitbucket.io.*;
+import com.atlassian.bitbucket.scm.*;
 import java.util.*;
 import java.io.IOException;
 

@@ -3,6 +3,10 @@ Reject Merge Commit Hook
 
 [Download the latest version from Atlassian Marketplace](https://marketplace.atlassian.com/plugins/com.carolynvs.reject-merge-commit-hook)
 
-This is a pre-receive hook plugin for Atlassian Stash. It rejects merge commits where all the parents for the commit are from the same branch. Merges which involve multiple branches, e.g. merging a feature branch into master, are allowed. 
+This is a pre-receive hook plugin for Atlassian Bitbucket Server. It rejects trivial merges and keeps your history clean and linear by enforcing a workflow which prefers using 'git pull --rebase'.
 
-The goal is to prevent unnecessary merge commits, e.g. "Merge branch 'master' of mygitserver:owner/repo", from polluting a repository. For example, your team may be following a workflow which prefers using 'git pull --rebase' and this plugin will enforce that policy.
+                                        /*\
+If you think -*-*-*- is better than  --/-*-\-*-*
+                                            \*/
+
+This plug in is for you!
