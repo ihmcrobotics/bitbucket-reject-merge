@@ -1,17 +1,13 @@
 package ut.com.carolynvs.stash.plugin.reject_merge_commit_hook;
 
-import com.atlassian.bitbucket.commit.Commit;
-import com.atlassian.bitbucket.commit.CommitService;
-import com.atlassian.bitbucket.commit.CommitsBetweenRequest;
-import com.atlassian.bitbucket.commit.MinimalCommit;
+import com.atlassian.bitbucket.commit.*;
 import com.atlassian.bitbucket.hook.HookResponse;
 import com.atlassian.bitbucket.hook.repository.RepositoryHookContext;
 import com.atlassian.bitbucket.i18n.I18nService;
 import com.atlassian.bitbucket.idx.CommitIndex;
 import com.atlassian.bitbucket.repository.RefChange;
 import com.atlassian.bitbucket.repository.Repository;
-import com.atlassian.bitbucket.scm.Command;
-import com.atlassian.bitbucket.scm.git.command.GitCommandBuilderFactory;
+import com.atlassian.bitbucket.scm.git.command.*;
 import com.atlassian.bitbucket.util.*;
 import com.carolynvs.stash.plugin.reject_merge_commit_hook.GitBranchListOutputHandler;
 import com.carolynvs.stash.plugin.reject_merge_commit_hook.RejectMergeCommitHook;
@@ -21,8 +17,7 @@ import org.junit.Before;
 import org.junit.runner.RunWith;
 import static org.mockito.Mockito.*;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
+import org.mockito.*;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.OngoingStubbing;
 
@@ -74,12 +69,12 @@ public class RejectMergeCommitHookTest extends TestCase
     {
         StringWriter output = new StringWriter();
         when(hookResponse.out()).thenReturn(new PrintWriter(output));
+        when(hookResponse.err()).thenReturn(new PrintWriter(output));
     }
 
     private void MockGitBranchContainsCommand(String... branches)
     {
-        Command<List<String>> gitBranchesCommand = (Command<List<String>>) mock(Command.class);
-
+        GitCommand<List<String>> gitBranchesCommand = (GitCommand<List<String>>) mock(GitCommand.class);
         OngoingStubbing<List<String>> when = when(gitBranchesCommand.call());
         for (String branch : branches)
         {
@@ -89,18 +84,27 @@ public class RejectMergeCommitHookTest extends TestCase
             when = when.thenReturn(result);
         }
 
-        GitCommandBuilderFactory gitCommandBuilder = mock(GitCommandBuilderFactory.class);
-        //when(gitCommandBuilder.command(any(String.class))).thenReturn(gitCommandBuilder);
-        //when(gitCommandBuilder.argument(any(String.class))).thenReturn(gitCommandBuilder);
-        //when(gitCommandBuilder.builder(any(String.class),any(GitBranchListOutputHandler.class))).thenReturn(gitBranchesCommand);
+        GitScmCommandBuilder gitCommandBuilder = mock(GitScmCommandBuilder.class);
+        when(gitCommandBuilder.command(any(String.class))).thenReturn(gitCommandBuilder);
+        when(gitCommandBuilder.argument(any(String.class))).thenReturn(gitCommandBuilder);
+        when(gitCommandBuilder.build(any(GitBranchListOutputHandler.class))).thenReturn(gitBranchesCommand);
 
-        //when(commandFactory.builder(repository)).thenReturn(gitCommandBuilder);
+        when(commandFactory.builder(repository)).thenReturn(gitCommandBuilder);
     }
 
-    private void MockGetCommits(Commit... commits)
+    private void MockCommit(final Commit commit)
     {
-        Page<Commit> pagedChanges = PageUtils.createPage(Lists.newArrayList(commits), PageUtils.newRequest(0, 1));
-        when(commitService.getCommitsBetween(any(CommitsBetweenRequest.class), any(PageRequest.class))).thenReturn(pagedChanges);
+        final String commitId = commit.getId();
+
+        when(commitService.getCommit(argThat(new ArgumentMatcher<CommitRequest>() {
+            @Override
+            public boolean matches(Object o) {
+                if(o == null) return false;
+
+                CommitRequest request = (CommitRequest)o;
+                return request.getCommitId().equals(commitId);
+            }
+        }))).thenReturn(commit);
     }
 
     private void MockCommitIndex()
@@ -112,7 +116,6 @@ public class RejectMergeCommitHookTest extends TestCase
     public void WhenCommit_WithMergeFromMasterToMaster_IsPushedToMaster_ItIsRejected()
     {
         Commit mergeCommit = buildMergeCommit();
-        MockGetCommits(mergeCommit);
         MockGitBranchContainsCommand("master", null);
 
         RejectMergeCommitHook hook = new RejectMergeCommitHook(commitService, commandFactory, i18nService, commitIndex);
@@ -129,7 +132,6 @@ public class RejectMergeCommitHookTest extends TestCase
     public void WhenCommit_WithMergeFromTrunkToFeature_IsPushedToMaster_ItIsAccepted()
     {
         Commit mergeCommit = buildMergeCommit();
-        MockGetCommits(mergeCommit);
         MockGitBranchContainsCommand("feature-branch", null);
 
         RejectMergeCommitHook hook = new RejectMergeCommitHook(commitService, commandFactory, i18nService, commitIndex);
@@ -146,7 +148,6 @@ public class RejectMergeCommitHookTest extends TestCase
     public void WhenCommit_WithMergeFromTrunkToFeature_IsPushedToFeature_ItIsAccepted()
     {
         Commit mergeCommit = buildMergeCommit();
-        MockGetCommits(mergeCommit);
         MockGitBranchContainsCommand("master", "feature-branch");
 
         RejectMergeCommitHook hook = new RejectMergeCommitHook(commitService, commandFactory, i18nService, commitIndex);
@@ -163,7 +164,6 @@ public class RejectMergeCommitHookTest extends TestCase
     public void WhenCommit_WithoutMerge_IsPushed_ItIsAccepted()
     {
         Commit normalCommit = buildCommit();
-        MockGetCommits(normalCommit);
 
         RejectMergeCommitHook hook = new RejectMergeCommitHook(commitService, commandFactory, i18nService, commitIndex);
         Collection<RefChange> refChanges = Lists.newArrayList(
@@ -173,30 +173,6 @@ public class RejectMergeCommitHookTest extends TestCase
         boolean isAccepted = hook.onReceive(hookContext, refChanges, hookResponse);
 
         assertTrue(isAccepted);
-    }
-
-    @Test
-    public void CommitsInFromHashAreNotIncludedInMergeChecks()
-    {
-        Commit normalCommit = buildCommit();
-        String fromHash = UUID.randomUUID().toString();
-        String toHash = normalCommit.getId();
-
-        Page<Commit> pagedChanges = PageUtils.createPage(Lists.newArrayList(normalCommit), PageUtils.newRequest(0, 1));
-        ArgumentCaptor<CommitsBetweenRequest> capturedRequest = ArgumentCaptor.forClass(CommitsBetweenRequest.class);
-        when(commitService.getCommitsBetween(capturedRequest.capture(), any(PageRequest.class)))
-                .thenReturn(pagedChanges);
-
-        RejectMergeCommitHook hook = new RejectMergeCommitHook(commitService, commandFactory, i18nService, commitIndex);
-        Collection<RefChange> refChanges = Lists.newArrayList(
-                buildRefChange("refs/heads/feature-branch", fromHash, toHash)
-        );
-
-        hook.onReceive(hookContext, refChanges, hookResponse);
-
-        CommitsBetweenRequest request = capturedRequest.getValue();
-        assertTrue(request.getExcludes().contains(fromHash));
-        assertTrue(request.getIncludes().contains(toHash));
     }
 
     private RefChange buildRefChange(String refId, String fromHash, String toHash)
@@ -232,17 +208,17 @@ public class RejectMergeCommitHookTest extends TestCase
             parents.add(buildParentCommit());
         }
         when(commit.getParents()).thenReturn(parents);
-
+        MockCommit(commit);
         return commit;
     }
 
     //TODO: the recursion fails because the parent commit does not really exist
-    private MinimalCommit buildParentCommit()
+    private Commit buildParentCommit()
     {
-        MinimalCommit parent = mock(MinimalCommit.class);
+        Commit parent = mock(Commit.class);
 
         when(parent.getId()).thenReturn(UUID.randomUUID().toString());
-
+        MockCommit(parent);
         return parent;
     }
 }
