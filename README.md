@@ -5,8 +5,13 @@ Reject Merge Commit Hook
 
 This is a pre-receive hook plugin for Atlassian Bitbucket Server. It rejects trivial merges and keeps your history clean and linear by enforcing a workflow which prefers using 'git pull --rebase'.
 
-                                        /*\
-If you think -*-*-*- is better than  --/-*-\-*-*
-                                            \*/
 
-This plug in is for you!
+If you think `-*-*-*-` is better than  
+
+```
+                                        /*\
+                                     --/-*-\-*-*
+                                            \*/
+```
+
+then this plugin is for you!
