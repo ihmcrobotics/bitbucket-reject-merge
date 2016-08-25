@@ -3,3 +3,6 @@
 /reject-merge-commit-hook.iml
 .DS_Store
 
+/.classpath
+/.project
+/.settings/*
