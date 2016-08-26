@@ -137,7 +137,7 @@ public class RejectMergeCommitHook implements PreReceiveRepositoryHook
       
       int openingApostrophe = message.indexOf('\'');
       int closingApostrophe = message.lastIndexOf('\'');
-      firstBranchName = getSimpleBranchName(message.substring(openingApostrophe, closingApostrophe));
+      firstBranchName = getSimpleBranchName(message.substring(openingApostrophe + 1, closingApostrophe));
       
       String[] split = message.split(" ");
       secondBranchName = getSimpleBranchName(split[split.length - 1]);

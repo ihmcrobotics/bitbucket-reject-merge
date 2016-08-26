@@ -37,6 +37,7 @@ import com.atlassian.bitbucket.scm.git.command.GitScmCommandBuilder;
 import com.google.common.collect.Lists;
 
 import junit.framework.TestCase;
+import liquibase.integration.commandline.Main;
 
 /**
  * Testing {@link us.ihmc.pushHook.RejectMergeCommitHook}
@@ -254,4 +255,26 @@ public class RejectMergeCommitHookTest extends TestCase
         MockCommit(parent);
         return parent;
     }
+    
+//    public static void main(String[] args)
+//   {
+//      String commitMessage = "Merge branch 'develop' of https://bshrewsbury@stash.ihmc.us/scm/rob/ihmc-open-robotics-software.git into origin/poop/develop";
+//            
+//            String message = commitMessage.trim().replaceAll("\\\n", " ");
+//      
+//      int openingApostrophe = message.indexOf('\'');
+//      int closingApostrophe = message.lastIndexOf('\'');
+//      String firstBranchName = getSimpleBranchName(message.substring(openingApostrophe + 1, closingApostrophe));
+//      
+//      String[] split = message.split(" ");
+//      String secondBranchName = getSimpleBranchName(split[split.length - 1]);
+//      
+//      System.out.println(firstBranchName + " " + secondBranchName + " " + firstBranchName.equals(secondBranchName));
+//   }
+//    
+//    private static String getSimpleBranchName(String branchName)
+//   {
+//      String[] split = branchName.split("/");
+//      return split[split.length - 1];
+//   }
 }
