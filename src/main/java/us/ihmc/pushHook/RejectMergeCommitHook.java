@@ -1,5 +1,9 @@
 package us.ihmc.pushHook;
 
+import java.util.Collection;
+
+import javax.annotation.Nonnull;
+
 import com.atlassian.bitbucket.commit.Commit;
 import com.atlassian.bitbucket.commit.CommitRequest;
 import com.atlassian.bitbucket.commit.CommitService;
@@ -12,13 +16,7 @@ import com.atlassian.bitbucket.idx.CommitIndex;
 import com.atlassian.bitbucket.repository.RefChange;
 import com.atlassian.bitbucket.repository.RefChangeType;
 import com.atlassian.bitbucket.repository.Repository;
-import com.atlassian.bitbucket.scm.Command;
 import com.atlassian.bitbucket.scm.git.command.GitCommandBuilderFactory;
-
-import javax.annotation.Nonnull;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
 
 public class RejectMergeCommitHook implements PreReceiveRepositoryHook
 {
@@ -27,6 +25,9 @@ public class RejectMergeCommitHook implements PreReceiveRepositoryHook
    private final I18nService i18nService;
    private final CommitIndex commitIndex;
    private static final String REFS_HEADS = "refs/heads/";
+   private String branchName;
+   private String firstBranchName;
+   private String secondBranchName;
 
    public RejectMergeCommitHook(final CommitService commitService, final GitCommandBuilderFactory commandFactory, final I18nService i18nService,
                                 final CommitIndex commitIndex)
@@ -60,17 +61,11 @@ public class RejectMergeCommitHook implements PreReceiveRepositoryHook
             continue;
          }
 
-         //this works correctly for branch names containing refs/heads as well, e.g. refs/heads/blaarefs/heads/bugfix1
-         String branchName = refChange.getRefId().substring(REFS_HEADS.length());
+         branchName = refChange.getRefId().substring(REFS_HEADS.length());
 
          if (containsIllegalMergeRecursive(refChange.getToHash(), repository, branchName, hookResponse))
          {
-            hookResponse.err()
-                        .println(i18nService.getText("us.ihmc.pushHook.error_message",
-                                                     "Trivial merge detected on local branch " + branchName + "\nPlease fix by running: git rebase origin/"
-                                                   + branchName
-                                                   + "\n\nNext time, use a rebase to keep a clean linear history: ie. git pull --rebase\n"));
-            hookResponse.err().println("=================================");
+            hookResponse.err() .println(i18nService.getText("us.ihmc.pushHook.error_message", "Branch " + branchName + ": Cannot merge " + firstBranchName + " into " + secondBranchName + "."));
             return false;
          }
       }
@@ -135,32 +130,55 @@ public class RejectMergeCommitHook implements PreReceiveRepositoryHook
          return false;
       }
 
-      HashSet<String> parentBranches = new HashSet<String>();
-      for (MinimalCommit parent : commit.getParents())
+      // Check if the message shows a branch merging into itself.
+      // ex. Merge branch 'develop' of https://sbertrand@stash.ihmc.us/scm/rob/ihmc-open-robotics-software.git into develop
+      
+      String message = commit.getMessage().trim().replaceAll("\\\n", " ");
+      
+      int openingApostrophe = message.indexOf('\'');
+      int closingApostrophe = message.lastIndexOf('\'');
+      firstBranchName = getSimpleBranchName(message.substring(openingApostrophe, closingApostrophe));
+      
+      String[] split = message.split(" ");
+      secondBranchName = getSimpleBranchName(split[split.length - 1]);
+      
+      if (firstBranchName.equals(secondBranchName))
       {
-         Command<List<String>> getBranches = commandFactory.builder(repository).command("branch").argument("--contains").argument(parent.getId())
-                                                           .build(new GitBranchListOutputHandler());
-
-         List<String> branches = getBranches.call();
-         // the commit has not been pushed yet and only belongs to the branch to which we are currently pushing
-         if (null == branches || branches.size() == 0)
-         {
-            parentBranches.add(branchName);
-         }
-         else
-         {
-            parentBranches.addAll(branches);
-         }
-      }
-
-      //if all parents are in the same branch, the merge is illegal
-      if (parentBranches.size() < 2)
-      {
-         hookResponse.err().println("=================================");
-         hookResponse.err().println(String.format("%s: %s", i18nService.getText("us.ihmc.pushHook.rejected_merge_commit",
-                                                                                "Rejected merge commit: "), commit.getId()));
          return true;
       }
+      
+//      HashSet<String> parentBranches = new HashSet<String>();
+//      for (MinimalCommit parent : commit.getParents())
+//      {
+//         Command<List<String>> getBranches = commandFactory.builder(repository).command("branch").argument("--contains").argument(parent.getId())
+//                                                           .build(new GitBranchListOutputHandler());
+//
+//         List<String> branches = getBranches.call();
+//         // the commit has not been pushed yet and only belongs to the branch to which we are currently pushing
+//         if (null == branches || branches.size() == 0)
+//         {
+//            parentBranches.add(branchName);
+//         }
+//         else
+//         {
+//            parentBranches.addAll(branches);
+//         }
+//      }
+//
+//      //if all parents are in the same branch, the merge is illegal
+//      if (parentBranches.size() < 2)
+//      {
+//         hookResponse.err().println("=================================");
+//         hookResponse.err().println(String.format("%s: %s", i18nService.getText("us.ihmc.pushHook.rejected_merge_commit",
+//                                                                                "Rejected merge commit: "), commit.getId()));
+//         return true;
+//      }
       return false;
+   }
+   
+   private String getSimpleBranchName(String branchName)
+   {
+      String[] split = branchName.split("/");
+      return split[split.length - 1];
    }
 }
