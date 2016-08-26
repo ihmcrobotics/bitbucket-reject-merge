@@ -1,17 +1,10 @@
-Reject Merge Commit Hook
-========================
+IHMC Push Hook
 
-[Download the latest version from Atlassian Marketplace](https://marketplace.atlassian.com/plugins/com.carolynvs.reject-merge-commit-hook)
+To build:
 
-This is a pre-receive hook plugin for Atlassian Bitbucket Server. It rejects trivial merges and keeps your history clean and linear by enforcing a workflow which prefers using 'git pull --rebase'.
+Install Atlassian SDK
 
+Run atlas-package
 
-If you think `-*-*-*-` is better than  
+Upload JAR from Bitbucket server Add-on manager
 
-```
-                                        /*\
-                                     --/-*-\-*-*
-                                            \*/
-```
-
-then this plugin is for you!
