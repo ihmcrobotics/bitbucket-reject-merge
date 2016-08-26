@@ -1,15 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.carolynvs</groupId>
-    <artifactId>reject-merge-commit-hook</artifactId>
-    <version>2.0.0</version>
+    <groupId>us.ihmc</groupId>
+    <artifactId>push-hook</artifactId>
+    <version>0.1.0</version>
     <organization>
-        <name>Carolyn Van Slyck</name>
-        <url>http://carolynvanslyck.com.com/</url>
+        <name>Duncan Calvert</name>
+        <url>ihmc.us</url>
     </organization>
-    <name>Reject Merge Commits Hook</name>
-    <description>Rejects trivial merges and keeps your history clean and linear by enforcing a workflow which prefers using 'git pull --rebase'</description>
+    <name>IHMC Push Hook</name>
     <packaging>atlassian-plugin</packaging>
     <dependencyManagement>
         <dependencies>
@@ -157,4 +156,5 @@
         </pluginRepository>
     </pluginRepositories>
 
+    <description>Prevents branches from being merged into themselves.</description>
 </project>
