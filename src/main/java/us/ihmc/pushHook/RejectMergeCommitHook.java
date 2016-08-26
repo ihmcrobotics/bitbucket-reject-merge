@@ -1,4 +1,4 @@
-package com.carolynvs.stash.plugin.reject_merge_commit_hook;
+package us.ihmc.pushHook;
 
 import com.atlassian.bitbucket.commit.Commit;
 import com.atlassian.bitbucket.commit.CommitRequest;
@@ -66,7 +66,7 @@ public class RejectMergeCommitHook implements PreReceiveRepositoryHook
          if (containsIllegalMergeRecursive(refChange.getToHash(), repository, branchName, hookResponse))
          {
             hookResponse.err()
-                        .println(i18nService.getText("com.carolynvs.stash.plugin.reject_merge_commit_hook.error_message",
+                        .println(i18nService.getText("us.ihmc.pushHook.error_message",
                                                      "Trivial merge detected on local branch " + branchName + "\nPlease fix by running: git rebase origin/"
                                                    + branchName
                                                    + "\n\nNext time, use a rebase to keep a clean linear history: ie. git pull --rebase\n"));
@@ -157,7 +157,7 @@ public class RejectMergeCommitHook implements PreReceiveRepositoryHook
       if (parentBranches.size() < 2)
       {
          hookResponse.err().println("=================================");
-         hookResponse.err().println(String.format("%s: %s", i18nService.getText("com.carolynvs.stash.plugin.reject_merge_commit_hook.rejected_merge_commit",
+         hookResponse.err().println(String.format("%s: %s", i18nService.getText("us.ihmc.pushHook.rejected_merge_commit",
                                                                                 "Rejected merge commit: "), commit.getId()));
          return true;
       }

@@ -1,4 +1,4 @@
-package ut.com.carolynvs.stash.plugin.reject_merge_commit_hook;
+package us.ihmc.pushHook;
 
 import com.atlassian.bitbucket.commit.*;
 import com.atlassian.bitbucket.hook.HookResponse;
@@ -9,10 +9,11 @@ import com.atlassian.bitbucket.repository.RefChange;
 import com.atlassian.bitbucket.repository.Repository;
 import com.atlassian.bitbucket.scm.git.command.*;
 import com.atlassian.bitbucket.util.*;
-import com.carolynvs.stash.plugin.reject_merge_commit_hook.GitBranchListOutputHandler;
-import com.carolynvs.stash.plugin.reject_merge_commit_hook.RejectMergeCommitHook;
 import com.google.common.collect.Lists;
 import junit.framework.TestCase;
+import us.ihmc.pushHook.GitBranchListOutputHandler;
+import us.ihmc.pushHook.RejectMergeCommitHook;
+
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import static org.mockito.Mockito.*;
@@ -26,7 +27,7 @@ import java.io.StringWriter;
 import java.util.*;
 
 /**
- * Testing {@link com.carolynvs.stash.plugin.reject_merge_commit_hook.RejectMergeCommitHook}
+ * Testing {@link us.ihmc.pushHook.RejectMergeCommitHook}
  */
 @RunWith(MockitoJUnitRunner.class)
 public class RejectMergeCommitHookTest extends TestCase

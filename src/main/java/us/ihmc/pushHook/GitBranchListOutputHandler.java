@@ -1,4 +1,4 @@
-package com.carolynvs.stash.plugin.reject_merge_commit_hook;
+package us.ihmc.pushHook;
 
 import com.atlassian.bitbucket.io.*;
 import com.atlassian.bitbucket.scm.*;
