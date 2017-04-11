@@ -8,7 +8,6 @@ import com.atlassian.bitbucket.idx.CommitIndex;
 import com.atlassian.bitbucket.repository.RefChange;
 import com.atlassian.bitbucket.repository.Repository;
 import com.atlassian.bitbucket.scm.git.command.*;
-import com.atlassian.bitbucket.util.*;
 import com.carolynvs.stash.plugin.reject_merge_commit_hook.GitBranchListOutputHandler;
 import com.carolynvs.stash.plugin.reject_merge_commit_hook.RejectMergeCommitHook;
 import com.google.common.collect.Lists;
@@ -18,7 +17,7 @@ import org.junit.runner.RunWith;
 import static org.mockito.Mockito.*;
 import org.junit.Test;
 import org.mockito.*;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.stubbing.OngoingStubbing;
 
 import java.io.PrintWriter;
@@ -68,7 +67,6 @@ public class RejectMergeCommitHookTest extends TestCase
     private void MockHookResponse()
     {
         StringWriter output = new StringWriter();
-        when(hookResponse.out()).thenReturn(new PrintWriter(output));
         when(hookResponse.err()).thenReturn(new PrintWriter(output));
     }
 
@@ -98,11 +96,8 @@ public class RejectMergeCommitHookTest extends TestCase
 
         when(commitService.getCommit(argThat(new ArgumentMatcher<CommitRequest>() {
             @Override
-            public boolean matches(Object o) {
-                if(o == null) return false;
-
-                CommitRequest request = (CommitRequest)o;
-                return request.getCommitId().equals(commitId);
+            public boolean matches(CommitRequest request) {
+                return request != null && request.getCommitId().equals(commitId);
             }
         }))).thenReturn(commit);
     }
@@ -180,7 +175,6 @@ public class RejectMergeCommitHookTest extends TestCase
         RefChange refChange = mock(RefChange.class);
 
         when(refChange.getRefId()).thenReturn(refId);
-        when(refChange.getFromHash()).thenReturn(fromHash);
         when(refChange.getToHash()).thenReturn(toHash);
 
         return refChange;
