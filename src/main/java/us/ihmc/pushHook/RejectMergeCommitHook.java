@@ -29,6 +29,11 @@ public class RejectMergeCommitHook implements PreReceiveRepositoryHook
    private String firstBranchName;
    private String secondBranchName;
 
+   public enum MergeAnalysis
+   {
+      VALID_MERGE, NOT_A_MERGE, ALREADY_PROCESSED, INCORRECT_FORMAT, ILLEGAL_MERGE_WITH_SELF;
+   }
+   
    public RejectMergeCommitHook(final CommitService commitService, final GitCommandBuilderFactory commandFactory, final I18nService i18nService,
                                 final CommitIndex commitIndex)
    {
@@ -63,9 +68,15 @@ public class RejectMergeCommitHook implements PreReceiveRepositoryHook
 
          branchName = refChange.getRefId().substring(REFS_HEADS.length());
 
-         if (containsIllegalMergeRecursive(refChange.getToHash(), repository, branchName, hookResponse))
+         MergeAnalysis mergeAnalysis = containsIllegalMergeRecursive(refChange.getToHash(), repository, branchName, hookResponse);
+         if (mergeAnalysis == MergeAnalysis.ILLEGAL_MERGE_WITH_SELF)
          {
-            hookResponse.err() .println(i18nService.getText("us.ihmc.pushHook.error_message", "Branch " + branchName + ": Cannot merge " + firstBranchName + " into " + secondBranchName + "."));
+            hookResponse.err() .println(i18nService.getText("us.ihmc.pushHook.error_message", "Branch " + branchName + ": Cannot merge branch " + firstBranchName + " into itself (" + secondBranchName + ")."));
+            return false;
+         }
+         else if (mergeAnalysis == MergeAnalysis.INCORRECT_FORMAT)
+         {
+            hookResponse.err() .println(i18nService.getText("us.ihmc.pushHook.error_message", "Invalid merge message format. Please format as \"Merge branch 'branch1' into branch2$\""));
             return false;
          }
       }
@@ -82,33 +93,35 @@ public class RejectMergeCommitHook implements PreReceiveRepositoryHook
     * @param hookResponse HookResponse object to interact with the user pushing the commit
     * @return true if the commit, or one of its ancestors, is a same-branch merge commit, false otherwise
     */
-   private boolean containsIllegalMergeRecursive(final String hash, final Repository repository, final String branchName,
+   private MergeAnalysis containsIllegalMergeRecursive(final String hash, final Repository repository, final String branchName,
                                                  @Nonnull final HookResponse hookResponse)
    {
       //isMemberOf is false for newly pushed commits, true for pre-existing ones
       //if this commit is not new, it and its ancestors are already processed, there is nothing to do
       if (commitIndex.isIndexed(hash, repository))
       {
-         return false;
+         return MergeAnalysis.ALREADY_PROCESSED;
       }
 
       final CommitRequest request = new CommitRequest.Builder(repository, hash).build();
       final Commit commit = commitService.getCommit(request);
 
       //if this commit is an illegal merge, return true.
-      if (isIllegalMerge(commit, repository, branchName, hookResponse))
+      MergeAnalysis mergeAnalysis = isIllegalMerge(commit, repository, branchName, hookResponse);
+      if (mergeAnalysis == MergeAnalysis.INCORRECT_FORMAT || mergeAnalysis == MergeAnalysis.ILLEGAL_MERGE_WITH_SELF)
       {
-         return true;
+         return mergeAnalysis;
       }
       // if this commit is OK, examine parents
       for (MinimalCommit parent : commit.getParents())
       {
-         if (containsIllegalMergeRecursive(parent.getId(), repository, branchName, hookResponse))
+         MergeAnalysis mergeAnalysisRecursive = containsIllegalMergeRecursive(parent.getId(), repository, branchName, hookResponse);
+         if (mergeAnalysisRecursive == MergeAnalysis.INCORRECT_FORMAT || mergeAnalysisRecursive == MergeAnalysis.ILLEGAL_MERGE_WITH_SELF)
          {
-            return true;
+            return mergeAnalysisRecursive;
          }
       }
-      return false;
+      return MergeAnalysis.VALID_MERGE;
    }
 
    /**
@@ -120,14 +133,14 @@ public class RejectMergeCommitHook implements PreReceiveRepositoryHook
     * @param hookResponse HookResponse object to interact with the user pushing the commit
     * @return true if the commit is a same-branch merge commit, false otherwise
     */
-   private boolean isIllegalMerge(final Commit commit, final Repository repository, final String branchName, @Nonnull final HookResponse hookResponse)
+   private MergeAnalysis isIllegalMerge(final Commit commit, final Repository repository, final String branchName, @Nonnull final HookResponse hookResponse)
    {
       // Thanks to http://stackoverflow.com/a/2081349 for how to identify the type of merge
 
       //not a merge commit, return quickly
       if (2 > commit.getParents().size())
       {
-         return false;
+         return MergeAnalysis.NOT_A_MERGE;
       }
 
       // Check if the message shows a branch merging into itself.
@@ -137,6 +150,12 @@ public class RejectMergeCommitHook implements PreReceiveRepositoryHook
       
       int openingApostrophe = message.indexOf('\'');
       int closingApostrophe = message.lastIndexOf('\'');
+      
+      if (openingApostrophe < 0 || closingApostrophe < 0)
+      {
+         return MergeAnalysis.INCORRECT_FORMAT;
+      }
+      
       firstBranchName = getSimpleBranchName(message.substring(openingApostrophe + 1, closingApostrophe));
       
       String[] split = message.split(" ");
@@ -144,7 +163,7 @@ public class RejectMergeCommitHook implements PreReceiveRepositoryHook
       
       if (firstBranchName.equals(secondBranchName))
       {
-         return true;
+         return MergeAnalysis.ILLEGAL_MERGE_WITH_SELF;
       }
       
 //      HashSet<String> parentBranches = new HashSet<String>();
@@ -173,7 +192,7 @@ public class RejectMergeCommitHook implements PreReceiveRepositoryHook
 //                                                                                "Rejected merge commit: "), commit.getId()));
 //         return true;
 //      }
-      return false;
+      return MergeAnalysis.VALID_MERGE;
    }
    
    private String getSimpleBranchName(String branchName)

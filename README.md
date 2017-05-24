@@ -4,7 +4,7 @@ To build:
 
 Install Atlassian SDK
 
-Run atlas-package
+Run atlas-package.bat
 
 Upload JAR from Bitbucket server Add-on manager
 
