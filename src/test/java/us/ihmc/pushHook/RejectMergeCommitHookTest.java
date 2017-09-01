@@ -112,7 +112,7 @@ public class RejectMergeCommitHookTest extends TestCase
 
         when(commitService.getCommit(argThat(new ArgumentMatcher<CommitRequest>() {
             @Override
-            public boolean matches(Object o) {
+            public boolean matches(CommitRequest o) {
                 if(o == null) return false;
 
                 CommitRequest request = (CommitRequest)o;
