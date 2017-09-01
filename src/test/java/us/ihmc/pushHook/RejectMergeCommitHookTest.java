@@ -1,7 +1,7 @@
 package us.ihmc.pushHook;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.argThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -18,7 +18,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.stubbing.OngoingStubbing;
 
 import com.atlassian.bitbucket.commit.Commit;
@@ -37,7 +37,8 @@ import com.atlassian.bitbucket.scm.git.command.GitScmCommandBuilder;
 import com.google.common.collect.Lists;
 
 import junit.framework.TestCase;
-import liquibase.integration.commandline.Main;
+import us.ihmc.pushHook.GitBranchListOutputHandler;
+import us.ihmc.pushHook.RejectMergeCommitHook;
 
 /**
  * Testing {@link us.ihmc.pushHook.RejectMergeCommitHook}
@@ -82,8 +83,8 @@ public class RejectMergeCommitHookTest extends TestCase
     private void MockHookResponse()
     {
         StringWriter output = new StringWriter();
-        when(hookResponse.out()).thenReturn(new PrintWriter(output));
-        when(hookResponse.err()).thenReturn(new PrintWriter(output));
+//        when(hookResponse.out()).thenReturn(new PrintWriter(output));
+//        when(hookResponse.err()).thenReturn(new PrintWriter(output));
     }
 
     private void MockGitBranchContainsCommand(String... branches)
@@ -126,7 +127,7 @@ public class RejectMergeCommitHookTest extends TestCase
         when(commitIndex.isIndexed(any(String.class), any(Repository.class))).thenReturn(false);
     }
 
-    @Ignore
+//    @Ignore
     @Test
     public void WhenCommitMergingDevelopIntoDevelop_ItIsRejected()
     {
@@ -143,7 +144,7 @@ public class RejectMergeCommitHookTest extends TestCase
         assertFalse(isAccepted);
     }
 
-    @Ignore
+//    @Ignore
     @Test
     public void WhenCommit_WithMergeFromMasterToMaster_IsPushedToMaster_ItIsRejected()
     {
@@ -160,7 +161,7 @@ public class RejectMergeCommitHookTest extends TestCase
         assertFalse(isAccepted);
     }
 
-    @Ignore
+//    @Ignore
     @Test
     public void WhenCommit_WithMergeFromTrunkToFeature_IsPushedToMaster_ItIsAccepted()
     {
@@ -177,7 +178,7 @@ public class RejectMergeCommitHookTest extends TestCase
         assertTrue(isAccepted);
     }
 
-    @Ignore
+//    @Ignore
     @Test
     public void WhenCommit_WithMergeFromTrunkToFeature_IsPushedToFeature_ItIsAccepted()
     {
@@ -214,7 +215,7 @@ public class RejectMergeCommitHookTest extends TestCase
         RefChange refChange = mock(RefChange.class);
 
         when(refChange.getRefId()).thenReturn(refId);
-        when(refChange.getFromHash()).thenReturn(fromHash);
+//        when(refChange.getFromHash()).thenReturn(fromHash);
         when(refChange.getToHash()).thenReturn(toHash);
 
         return refChange;
@@ -256,25 +257,25 @@ public class RejectMergeCommitHookTest extends TestCase
         return parent;
     }
     
-//    public static void main(String[] args)
-//   {
-//      String commitMessage = "Merge branch 'develop' of https://bshrewsbury@stash.ihmc.us/scm/rob/ihmc-open-robotics-software.git into origin/poop/develop";
-//            
-//            String message = commitMessage.trim().replaceAll("\\\n", " ");
-//      
-//      int openingApostrophe = message.indexOf('\'');
-//      int closingApostrophe = message.lastIndexOf('\'');
-//      String firstBranchName = getSimpleBranchName(message.substring(openingApostrophe + 1, closingApostrophe));
-//      
-//      String[] split = message.split(" ");
-//      String secondBranchName = getSimpleBranchName(split[split.length - 1]);
-//      
-//      System.out.println(firstBranchName + " " + secondBranchName + " " + firstBranchName.equals(secondBranchName));
-//   }
-//    
-//    private static String getSimpleBranchName(String branchName)
-//   {
-//      String[] split = branchName.split("/");
-//      return split[split.length - 1];
-//   }
+    public static void main(String[] args)
+   {
+      String commitMessage = "Merge branch 'develop' of https://bshrewsbury@stash.ihmc.us/scm/rob/ihmc-open-robotics-software.git into origin/poop/develop";
+            
+            String message = commitMessage.trim().replaceAll("\\\n", " ");
+      
+      int openingApostrophe = message.indexOf('\'');
+      int closingApostrophe = message.lastIndexOf('\'');
+      String firstBranchName = getSimpleBranchName(message.substring(openingApostrophe + 1, closingApostrophe));
+      
+      String[] split = message.split(" ");
+      String secondBranchName = getSimpleBranchName(split[split.length - 1]);
+      
+      System.out.println(firstBranchName + " " + secondBranchName + " " + firstBranchName.equals(secondBranchName));
+   }
+    
+    private static String getSimpleBranchName(String branchName)
+   {
+      String[] split = branchName.split("/");
+      return split[split.length - 1];
+   }
 }

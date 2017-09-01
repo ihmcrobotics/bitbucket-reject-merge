@@ -145,7 +145,8 @@ public class RejectMergeCommitHook implements PreReceiveRepositoryHook
 
       // Check if the message shows a branch merging into itself.
       // ex. Merge branch 'develop' of https://sbertrand@stash.ihmc.us/scm/rob/ihmc-open-robotics-software.git into develop
-      
+      System.out.println("Commit: " + commit);
+      System.out.println("Commit: " + commit.getMessage());
       String message = commit.getMessage().trim().replaceAll("\\\n", " ");
       
       int openingApostrophe = message.indexOf('\'');
