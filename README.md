@@ -1,4 +1,5 @@
-#IHMC Push Hook
+# IHMC Push Hook
+
 
 Reject commits where branches are merged with themselves. As in 'develop' merged with 'origin/develop'.
 
