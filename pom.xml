@@ -25,31 +25,26 @@
         <dependency>
             <groupId>com.atlassian.bitbucket.server</groupId>
             <artifactId>bitbucket-api</artifactId>
-            <version>4.14.3</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.atlassian.bitbucket.server</groupId>
             <artifactId>bitbucket-spi</artifactId>
-            <version>${bitbucket.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.atlassian.bitbucket.server</groupId>
             <artifactId>bitbucket-git-api</artifactId>
-            <version>4.14.3</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.atlassian.bitbucket.server</groupId>
             <artifactId>bitbucket-page-objects</artifactId>
-            <version>${bitbucket.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.atlassian.bitbucket.server</groupId>
             <artifactId>bitbucket-scm-common</artifactId>
-            <version>${bitbucket.version}</version>
             <scope>provided</scope>
         </dependency>
 		<dependency>
@@ -117,8 +112,8 @@
         </plugins>
     </build>
     <properties>
-        <bitbucket.version>4.14.3</bitbucket.version>
-        <bitbucket.data.version>4.14.3</bitbucket.data.version>
+        <bitbucket.version>5.3.1</bitbucket.version>
+        <bitbucket.data.version>5.3.1</bitbucket.data.version>
         <bitbucket.amps.version>6.2.8</bitbucket.amps.version>
         <plugin.testrunner.version>2.0.0</plugin.testrunner.version>
     </properties>

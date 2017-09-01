@@ -4,6 +4,7 @@ import com.atlassian.bitbucket.io.*;
 import com.atlassian.bitbucket.scm.*;
 import java.util.*;
 import java.io.IOException;
+import java.nio.charset.Charset;
 
 /**
  * Parse list of branches
@@ -23,7 +24,7 @@ public class GitBranchListOutputHandler extends LineReaderOutputHandler implemen
 
    public GitBranchListOutputHandler()
    {
-      super("UTF-8");
+      super(Charset.defaultCharset());
    }
 
    @Override
