@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>us.ihmc</groupId>
     <artifactId>push-hook</artifactId>
-    <version>2.0.1</version>
+    <version>2.0.3</version>
     <organization>
         <name>Duncan Calvert</name>
         <url>ihmc.us</url>

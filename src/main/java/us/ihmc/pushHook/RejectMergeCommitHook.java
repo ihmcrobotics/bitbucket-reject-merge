@@ -67,11 +67,13 @@ public class RejectMergeCommitHook implements PreRepositoryHook<RepositoryHookRe
          MergeAnalysis mergeAnalysis = containsIllegalMergeRecursive(refChange.getToHash(), repository, branchName);
          if (mergeAnalysis == MergeAnalysis.ILLEGAL_MERGE_WITH_SELF)
          {
-            return RepositoryHookResult.rejected(i18nService.getText("us.ihmc.pushHook.error_message", "Branch " + branchName + ": Cannot merge branch " + firstBranchName + " into itself (" + secondBranchName + ")."), "");
+            String errorMessage = "Branch " + branchName + ": Cannot merge branch " + firstBranchName + " into itself (" + secondBranchName + ").";
+            return RepositoryHookResult.rejected(i18nService.getText("us.ihmc.pushHook.error_message", errorMessage), errorMessage);
          }
          else if (mergeAnalysis == MergeAnalysis.INCORRECT_FORMAT)
          {
-            return RepositoryHookResult.rejected(i18nService.getText("us.ihmc.pushHook.error_message", "Invalid merge message format. Please format as \"Merge branch 'branch1' into branch2$\""), "");
+            String errorMessage = "Invalid merge message format. Please format as \"Merge branch 'branch1' into branch2$\"";
+            return RepositoryHookResult.rejected(i18nService.getText("us.ihmc.pushHook.error_message", errorMessage), errorMessage);
          }
       }
 
@@ -138,8 +140,6 @@ public class RejectMergeCommitHook implements PreRepositoryHook<RepositoryHookRe
 
       // Check if the message shows a branch merging into itself.
       // ex. Merge branch 'develop' of https://sbertrand@stash.ihmc.us/scm/rob/ihmc-open-robotics-software.git into develop
-      System.out.println("Commit: " + commit);
-      System.out.println("Commit: " + commit.getMessage());
       String message = commit.getMessage().trim().replaceAll("\\\n", " ");
       
       int openingApostrophe = message.indexOf('\'');
