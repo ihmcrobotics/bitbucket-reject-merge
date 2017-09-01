@@ -1,6 +1,10 @@
-IHMC Push Hook
+#IHMC Push Hook
 
-To build:
+Reject commits where branches are merged with themselves. As in 'develop' merged with 'origin/develop'.
+
+Fork of https://github.com/carolynvs/bitbucket-reject-merge
+
+###To build:
 
 Install Atlassian SDK
 
